@@ -1,406 +1,64 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>简约滚动时钟</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
     <style>
-        /* 全局重置与字体 */
-        * {
+        *{
+            /* 初始化 */
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
-
-        body {
-            background: #f5f7fa;
+        body{
+            /* 100% 窗口高度 */
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            padding: 16px;
-        }
-
-        /* 主卡片 – 极简磨砂玻璃质感 */
-        .clock-card {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 56px;
-            padding: 40px 48px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.2s ease;
-            max-width: 700px;
             width: 100%;
-        }
-
-        /* 时间区域 – 水平排列，数字滚动容器 */
-        .time-row {
+            /* 弹性布局 水平+垂直居中 */
             display: flex;
             justify-content: center;
-            align-items: baseline;
-            gap: 10px;
-            flex-wrap: nowrap;
-            margin-bottom: 18px;
-        }
-
-        /* 每个时间块 (时/分/秒) */
-        .time-block {
-            display: flex;
-            flex-direction: column;
             align-items: center;
-            min-width: 90px;
+            background-color: #06252e;
         }
-
-        /* 数字滚动容器 */
-        .scroll-container {
-            height: 96px;
-            overflow: hidden;
-            position: relative;
+        .box{
             width: 100%;
-            border-radius: 28px;
-            background: transparent;
-            display: flex;
-            justify-content: center;
+            /* 投影效果 */
+            -webkit-box-reflect:below 1px linear-gradient(transparent, rgba(0,0,0,0.2));
         }
-
-        /* 数字列表 – 垂直排列，通过transform实现滚动 */
-        .digit-list {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
-            will-change: transform;
-            line-height: 1;
+        h1{
+            color: #fff;
+            font-size: 96px;
+            /* 字间距 */
+            letter-spacing: 15px;
+            /* 转大写 */
+            text-transform: uppercase;
+            text-align: center;
+            line-height: 76px;
+            outline: none;
+            /* 自定义属性 --c,可通过 var 函数对其调用 */
+            --c:lightseagreen;
+            /* 调用自定义属性--c，设置文字阴影（发光效果） */
+            text-shadow: 0 0 10px var(--c),
+            0 0 20px var(--c),
+            0 0 40px var(--c),
+            0 0 80px var(--c),
+            0 0 160px var(--c);
+            /* 执行动画：动画名 时长 线性的 无限次播放 */
+            animation: animate 5s linear infinite;
         }
-
-        .digit-item {
-            height: 92px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 80px;
-            font-weight: 500;
-            letter-spacing: 2px;
-            color: #1e293b;
-            background: transparent;
-            padding: 0 4px;
-            text-shadow: 0 2px 6px rgba(0,0,0,0.02);
-        }
-
-        /* 冒号分隔符 – 精致居中 */
-        .separator {
-            font-size: 68px;
-            font-weight: 300;
-            color: #94a3b8;
-            margin: 0 4px;
-            line-height: 1;
-            padding-top: 6px;
-            opacity: 0.65;
-        }
-
-        /* 上午/下午标记 – 小字优雅 */
-        .ampm {
-            font-size: 18px;
-            font-weight: 450;
-            color: #64748b;
-            margin-left: 8px;
-            letter-spacing: 0.5px;
-            background: rgba(148, 163, 184, 0.15);
-            padding: 4px 12px;
-            border-radius: 30px;
-            backdrop-filter: blur(2px);
-            align-self: center;
-            margin-bottom: 6px;
-        }
-
-        /* 日期与星期行 */
-        .date-row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 14px;
-            margin-top: 6px;
-            font-size: 21px;
-            font-weight: 400;
-            color: #475569;
-            letter-spacing: 0.3px;
-            background: rgba(241, 245, 249, 0.5);
-            padding: 12px 26px;
-            border-radius: 50px;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(203, 213, 225, 0.25);
-            width: fit-content;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .date-row span {
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .dot-divider {
-            width: 4px;
-            height: 4px;
-            background: #94a3b8;
-            border-radius: 50%;
-            opacity: 0.5;
-            margin: 0 6px;
-        }
-
-        /* 响应式调整 */
-        @media (max-width: 520px) {
-            .clock-card {
-                padding: 32px 20px;
-                border-radius: 42px;
+        /* 定义动画 */
+        @keyframes animate{
+            to{
+                /* 色相旋转过滤镜（设置度数可改变颜色） */
+                filter: hue-rotate(360deg);
             }
-            .time-block {
-                min-width: 64px;
-            }
-            .scroll-container {
-                height: 72px;
-            }
-            .digit-item {
-                height: 70px;
-                font-size: 58px;
-            }
-            .separator {
-                font-size: 44px;
-                margin: 0 2px;
-            }
-            .ampm {
-                font-size: 15px;
-                padding: 2px 10px;
-                margin-left: 2px;
-            }
-            .date-row {
-                font-size: 17px;
-                padding: 10px 18px;
-                gap: 8px;
-                flex-wrap: wrap;
-            }
-        }
-
-        @media (max-width: 380px) {
-            .digit-item {
-                font-size: 46px;
-                height: 54px;
-            }
-            .scroll-container {
-                height: 56px;
-            }
-            .time-block {
-                min-width: 52px;
-            }
-            .separator {
-                font-size: 34px;
-            }
-            .date-row {
-                font-size: 15px;
-                padding: 8px 14px;
-            }
-        }
-
-        /* 辅助隐藏溢出 */
-        .overflow-hidden {
-            overflow: hidden;
-        }
-
-        /* 微光动画 – 增加一点呼吸感 (可选) */
-        @keyframes subtleGlow {
-            0% { opacity: 0.98; }
-            50% { opacity: 1; }
-            100% { opacity: 0.98; }
-        }
-        .clock-card {
-            animation: subtleGlow 4s infinite ease-in-out;
         }
     </style>
 </head>
 <body>
-
-<div class="clock-card" id="app">
-    <!-- 时间行 -->
-    <div class="time-row">
-        <!-- 时 -->
-        <div class="time-block">
-            <div class="scroll-container" id="hoursContainer">
-                <div class="digit-list" id="hoursList">
-                    <!-- 由 JS 动态填充 0~23 -->
-                </div>
-            </div>
-        </div>
-
-        <span class="separator">:</span>
-
-        <!-- 分 -->
-        <div class="time-block">
-            <div class="scroll-container" id="minutesContainer">
-                <div class="digit-list" id="minutesList">
-                    <!-- 由 JS 动态填充 0~59 -->
-                </div>
-            </div>
-        </div>
-
-        <span class="separator">:</span>
-
-        <!-- 秒 -->
-        <div class="time-block">
-            <div class="scroll-container" id="secondsContainer">
-                <div class="digit-list" id="secondsList">
-                    <!-- 由 JS 动态填充 0~59 -->
-                </div>
-            </div>
-        </div>
-
-        <!-- AM / PM 标记 (仅用于12小时制展示, 但此处保留装饰) -->
-        <span class="ampm" id="ampmLabel">--</span>
+    <div class="box">
+        <h1 contenteditable="true">hello</h1>
     </div>
-
-    <!-- 日期 + 星期 -->
-    <div class="date-row" id="dateDisplay">
-        <span id="dateText">----年--月--日</span>
-        <span class="dot-divider"></span>
-        <span id="weekdayText">---</span>
-    </div>
-</div>
-
-<script>
-    (function() {
-        // ---------- DOM 引用 ----------
-        const hoursList = document.getElementById('hoursList');
-        const minutesList = document.getElementById('minutesList');
-        const secondsList = document.getElementById('secondsList');
-
-        const hoursContainer = document.getElementById('hoursContainer');
-        const minutesContainer = document.getElementById('minutesContainer');
-        const secondsContainer = document.getElementById('secondsContainer');
-
-        const ampmEl = document.getElementById('ampmLabel');
-        const dateTextEl = document.getElementById('dateText');
-        const weekdayTextEl = document.getElementById('weekdayText');
-
-        // ---------- 初始化数字列表 (0~23 / 0~59) ----------
-        function populateDigits(listElement, count, pad = true) {
-            listElement.innerHTML = '';
-            for (let i = 0; i < count; i++) {
-                const item = document.createElement('div');
-                item.className = 'digit-item';
-                // 两位数显示，如 "00", "01" ... 
-                item.textContent = pad ? String(i).padStart(2, '0') : String(i);
-                listElement.appendChild(item);
-            }
-        }
-
-        // 小时: 0~23 (24个)
-        populateDigits(hoursList, 24, true);
-        // 分钟: 0~59
-        populateDigits(minutesList, 60, true);
-        // 秒: 0~59
-        populateDigits(secondsList, 60, true);
-
-        // ---------- 工具函数: 获取偏移量 ----------
-        function getOffset(value, max) {
-            // value 范围 0 ~ max-1, 每一项高度为 92px (桌面) 或动态?
-            // 但为了适配不同屏幕, 我们根据实际渲染高度计算.
-            // 取第一个 digit-item 的实际高度 (包含padding)
-            let itemHeight = 92; // fallback
-            if (hoursList.firstElementChild) {
-                const computed = window.getComputedStyle(hoursList.firstElementChild);
-                const h = hoursList.firstElementChild.offsetHeight;
-                if (h > 0) itemHeight = h;
-            }
-            return -value * itemHeight;
-        }
-
-        // 通用更新滚动位置 (transform)
-        function updateScroll(listElement, value, max) {
-            const firstItem = listElement.querySelector('.digit-item');
-            if (!firstItem) return;
-            const itemHeight = firstItem.offsetHeight;
-            if (itemHeight === 0) return;
-            const offset = -value * itemHeight;
-            listElement.style.transform = `translateY(${offset}px)`;
-        }
-
-        // ---------- 星期映射 ----------
-        const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-
-        // ---------- 更新时间 & 日期 ----------
-        function updateClock() {
-            const now = new Date();
-
-            // --- 时间 ---
-            let hours = now.getHours();
-            const minutes = now.getMinutes();
-            const seconds = now.getSeconds();
-
-            // 判断上下午 (12小时显示用)
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-
-            // 小时转为12小时制用于显示 (但我们滚动列表依然用24小时制数值，因为列表是0~23)
-            // 但如果你希望小时显示为12小时制，滚动列表需要改成1~12，但为了符合大多数“滚动时钟”习惯，
-            // 这里保持24小时制滚动 (0~23)，同时右上角显示AM/PM作为辅助。
-            // 若想完全12小时制可修改列表，但这里保留24h滚动+AMPM标记。
-            const displayHours = hours; // 0-23
-
-            // 更新滚动位置
-            updateScroll(hoursList, displayHours, 24);
-            updateScroll(minutesList, minutes, 60);
-            updateScroll(secondsList, seconds, 60);
-
-            // 更新AM/PM
-            ampmEl.textContent = ampm;
-
-            // --- 日期 & 星期 ---
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const weekdayIndex = now.getDay(); // 0 周日
-
-            dateTextEl.textContent = `${year}年${month}月${day}日`;
-            weekdayTextEl.textContent = weekdays[weekdayIndex];
-        }
-
-        // ---------- 窗口变化重新计算 (保证高度正确) ----------
-        let resizeTimer = null;
-        function handleResize() {
-            if (resizeTimer) clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                // 强制刷新一次滚动位置
-                const now = new Date();
-                const hours = now.getHours();
-                const minutes = now.getMinutes();
-                const seconds = now.getSeconds();
-                updateScroll(hoursList, hours, 24);
-                updateScroll(minutesList, minutes, 60);
-                updateScroll(secondsList, seconds, 60);
-            }, 120);
-        }
-
-        window.addEventListener('resize', handleResize);
-
-        // ---------- 启动时钟 ----------
-        updateClock();
-        setInterval(updateClock, 200); // 200ms 保证秒数切换平滑
-
-        // 额外：页面加载完成后二次校准 (防止布局偏移)
-        window.addEventListener('load', function() {
-            setTimeout(updateClock, 180);
-        });
-
-        // 可见性变化后立即刷新 (比如从后台切回)
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden) {
-                updateClock();
-            }
-        });
-
-        console.log('✨ 简约滚动时钟已启动 — 设计：元宝');
-    })();
-</script>
 </body>
 </html>
