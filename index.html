@@ -1,64 +1,251 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>旋转立方体 · C++ 名言</title>
     <style>
-        *{
-            /* 初始化 */
-            margin: 0;
-            padding: 0;
-        }
-        body{
-            /* 100% 窗口高度 */
-            min-height: 100vh;
-            width: 100%;
-            /* 弹性布局 水平+垂直居中 */
+        body {
+            background: #f0f4f8;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #06252e;
+            min-height: 95vh;
+            margin: 0;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
         }
-        .box{
-            width: 100%;
-            /* 投影效果 */
-            -webkit-box-reflect:below 1px linear-gradient(transparent, rgba(0,0,0,0.2));
+
+        .scene {
+            perspective: 800px;
+            width: 260px;
+            height: 280px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
-        h1{
-            color: #fff;
-            font-size: 96px;
-            /* 字间距 */
-            letter-spacing: 15px;
-            /* 转大写 */
-            text-transform: uppercase;
+
+        #cube {
+            width: 160px;
+            height: 160px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: rotateCube 8s infinite linear;
+            margin: 0 auto 20px auto;
+            cursor: pointer;
+        }
+
+        #cube div {
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            background: rgba(45, 155, 235, 0.18);
+            border: 2px solid #2d9beb;
+            border-radius: 12px;
+            box-shadow: inset 0 0 18px rgba(45, 155, 235, 0.08);
+            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #1a2634;
+            font-weight: 480;
+            letter-spacing: 0.3px;
             text-align: center;
-            line-height: 76px;
-            outline: none;
-            /* 自定义属性 --c,可通过 var 函数对其调用 */
-            --c:lightseagreen;
-            /* 调用自定义属性--c，设置文字阴影（发光效果） */
-            text-shadow: 0 0 10px var(--c),
-            0 0 20px var(--c),
-            0 0 40px var(--c),
-            0 0 80px var(--c),
-            0 0 160px var(--c);
-            /* 执行动画：动画名 时长 线性的 无限次播放 */
-            animation: animate 5s linear infinite;
+            padding: 6px;
+            box-sizing: border-box;
+            word-break: break-word;
+            line-height: 1.4;
+            backface-visibility: visible;
         }
-        /* 定义动画 */
-        @keyframes animate{
-            to{
-                /* 色相旋转过滤镜（设置度数可改变颜色） */
-                filter: hue-rotate(360deg);
-            }
+
+        /* 每个面单独微色调 */
+        #cube .front  { background: rgba(0, 210, 190, 0.20); border-color: #00d2be; transform: translateZ(80px); }
+        #cube .back   { background: rgba(255, 170, 60, 0.20); border-color: #ffaa3c; transform: rotateY(180deg) translateZ(80px); }
+        #cube .right  { background: rgba(110, 130, 250, 0.20); border-color: #6e82fa; transform: rotateY(90deg) translateZ(80px); }
+        #cube .left   { background: rgba(255, 115, 132, 0.20); border-color: #ff7384; transform: rotateY(-90deg) translateZ(80px); }
+        #cube .top    { background: rgba(140, 220, 138, 0.20); border-color: #8cdc8a; transform: rotateX(90deg) translateZ(80px); }
+        #cube .bottom { background: rgba(195, 145, 230, 0.20); border-color: #c391e6; transform: rotateX(-90deg) translateZ(80px); }
+
+        /* 名言显示区 */
+        .quote-board {
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 14px 22px;
+            border-radius: 38px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
+            max-width: 270px;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 440;
+            color: #1e2a3a;
+            text-align: center;
+            line-height: 1.5;
+            transition: opacity 0.2s ease;
+            margin-top: 8px;
+            word-break: break-word;
+        }
+
+        .quote-icon {
+            font-size: 20px;
+            margin-right: 8px;
+            opacity: 0.6;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #7a8a9e;
+            margin-top: 12px;
+            letter-spacing: 0.4px;
+            background: rgba(255,255,255,0.3);
+            padding: 4px 16px;
+            border-radius: 40px;
+        }
+
+        @keyframes rotateCube {
+            0%   { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+            100% { transform: rotateX(720deg) rotateY(540deg) rotateZ(360deg); }
+        }
+
+        /* 悬停暂停由 JS 控制 */
+        #cube.paused {
+            animation-play-state: paused !important;
+        }
+
+        @media (max-width: 420px) {
+            #cube { width: 130px; height: 130px; }
+            #cube div { width: 130px; height: 130px; font-size: 11px; }
+            #cube .front  { transform: translateZ(65px); }
+            #cube .back   { transform: rotateY(180deg) translateZ(65px); }
+            #cube .right  { transform: rotateY(90deg) translateZ(65px); }
+            #cube .left   { transform: rotateY(-90deg) translateZ(65px); }
+            #cube .top    { transform: rotateX(90deg) translateZ(65px); }
+            #cube .bottom { transform: rotateX(-90deg) translateZ(65px); }
+            .quote-board { font-size: 14px; padding: 12px 16px; max-width: 220px; }
         }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h1 contenteditable="true">hello</h1>
+
+<div class="scene">
+    <!-- 立方体 -->
+    <div id="cube">
+        <div class="front">template<br>typename T</div>
+        <div class="back">auto&<br>move semantics</div>
+        <div class="right">constexpr<br>compile-time</div>
+        <div class="left">RAII<br>scope guard</div>
+        <div class="top">virtual<br>polymorphism</div>
+        <div class="bottom">lambda<br>capture</div>
     </div>
+
+    <!-- 名言展板 -->
+    <div class="quote-board" id="quoteDisplay">
+        <span class="quote-icon">💬</span>
+        <span id="quoteText">C++ 是工程师的浪漫</span>
+    </div>
+
+    <div class="hint">✦ 悬停暂停 · 点击换名言 ✦</div>
+</div>
+
+<script>
+    (function() {
+        // ---------- 🌟 C++ 中文名言库 (随机出现) ----------
+        const quotes = [
+            "C++ 是一门信仰，指针是它的圣经。",
+            "RAII 不只是技术，更是 C++ 的处世哲学。",
+            "模板元编程：用编译器算尽一切。",
+            "移动语义让零拷贝不再是梦。",
+            "虚函数表里藏着多态的浪漫。",
+            "constexpr 把运行时变成编译期。",
+            "智能指针：手动内存管理的挽歌。",
+            "Lambda 表达式让算法更优雅。",
+            "SFINAE —— 替换失败不是错误。",
+            "C++ 标准库是经过千锤百炼的宝藏。",
+            "概念 (concept) 让模板约束变得清澈。",
+            "异常安全是 C++ 程序员的成年礼。",
+            "左值右值，一场关于身份的哲学思辨。",
+            "析构函数里藏着最后的倔强。",
+            "友元函数：打破封装的一把钥匙。",
+            "static_assert 把错误扼杀在编译期。",
+            "C++20 协程：异步编程的新纪元。",
+            "命名空间是避免冲突的避风港。",
+            "运算符重载：让自定义类型拥有原生气质。",
+            "三法则 / 五法则：资源管理的金科玉律。",
+            "volatile 不是原子操作，别被骗了。",
+            "对齐 (alignment) 是性能的隐形推手。",
+            "inline 关键字：现代 C++ 的链接魔法。",
+            "enum class 比普通 enum 更懂类型安全。",
+            "结构化绑定：解包 tuple 的语法糖。",
+            "折叠表达式：可变参数模板的瑞士军刀。",
+            "if constexpr 让编译期分支不再痛苦。",
+            "C++ 是一种信仰，也是一种修行。",
+            "写好 C++ 需要理解内存和对象的本质。",
+            "没有银弹，但 RAII 是最接近的那颗。"
+        ];
+
+        // DOM 元素
+        const quoteTextEl = document.getElementById('quoteText');
+        const cubeEl = document.getElementById('cube');
+        const quoteBoard = document.querySelector('.quote-board');
+
+        // ---------- 随机名言 ----------
+        function showRandomQuote() {
+            const randomIndex = Math.floor(Math.random() * quotes.length);
+            quoteTextEl.textContent = quotes[randomIndex];
+        }
+
+        // 初始显示一条随机名言
+        showRandomQuote();
+
+        // 点击展板 / 立方体均可刷新名言
+        quoteBoard.addEventListener('click', showRandomQuote);
+        cubeEl.addEventListener('click', showRandomQuote);
+
+        // ---------- 悬停暂停逻辑 (增强) ----------
+        let hoverTimeout = null;
+
+        cubeEl.addEventListener('mouseenter', function() {
+            cubeEl.classList.add('paused');
+            if (hoverTimeout) clearTimeout(hoverTimeout);
+        });
+
+        cubeEl.addEventListener('mouseleave', function() {
+            // 延迟一点点恢复，避免闪烁
+            hoverTimeout = setTimeout(() => {
+                cubeEl.classList.remove('paused');
+            }, 150);
+        });
+
+        // 触摸设备支持: 点击切换名言 + 暂停/恢复 (触摸时切换暂停状态)
+        cubeEl.addEventListener('touchstart', function(e) {
+            // 触摸时切换暂停状态
+            if (cubeEl.classList.contains('paused')) {
+                cubeEl.classList.remove('paused');
+            } else {
+                cubeEl.classList.add('paused');
+            }
+            // 同时刷新名言 (但不要干扰点击事件)
+            showRandomQuote();
+        }, { passive: true });
+
+        // 额外：点击名言板也刷新（已绑）
+
+        // 定时器：每 12 秒自动更换名言（即使无人交互，保持新鲜感）
+        setInterval(() => {
+            showRandomQuote();
+        }, 12500);
+
+        // 页面加载完成后再随机一次，确保多样性
+        window.addEventListener('load', function() {
+            setTimeout(showRandomQuote, 600);
+        });
+
+        console.log('🧊 旋转立方体 + C++ 中文名言 · 悬停暂停 · 点击换言');
+    })();
+</script>
 </body>
 </html>
