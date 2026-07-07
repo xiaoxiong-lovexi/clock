@@ -1,256 +1,406 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<title>实时时钟</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{
-    background:linear-gradient(135deg,#0c0c1d,#1a1a3e);
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-family:'Consolas','Courier New',monospace;
-  }
-  .container{
-    background:rgba(255,255,255,0.05);
-    backdrop-filter:blur(20px);
-    border:1px solid rgba(255,255,255,0.1);
-    border-radius:20px;
-    padding:30px 40px;
-    box-shadow:0 20px 60px rgba(0,0,0,0.5);
-    text-align:center;
-    max-width:420px;
-  }
-  .clock-title{
-    color:#64d8ff;
-    font-size:14px;
-    letter-spacing:4px;
-    text-transform:uppercase;
-    margin-bottom:20px;
-    text-shadow:0 0 20px rgba(100,216,255,0.3);
-  }
-  .clock-face{
-    position:relative;
-    width:240px;
-    height:240px;
-    margin:0 auto 20px;
-  }
-  .clock-face svg{
-    width:100%;
-    height:100%;
-  }
-  .digital-time{
-    font-size:48px;
-    font-weight:bold;
-    color:#fff;
-    letter-spacing:3px;
-    text-shadow:0 0 30px rgba(100,216,255,0.5);
-    margin:10px 0 5px;
-  }
-  .digital-date{
-    font-size:16px;
-    color:rgba(255,255,255,0.6);
-    letter-spacing:2px;
-    margin-bottom:15px;
-  }
-  .quote-box{
-    background:rgba(255,255,255,0.03);
-    border-left:3px solid #64d8ff;
-    padding:12px 16px;
-    margin-top:15px;
-    border-radius:0 8px 8px 0;
-    text-align:left;
-  }
-  .quote-text{
-    color:rgba(255,255,255,0.85);
-    font-size:13px;
-    font-style:italic;
-    line-height:1.6;
-  }
-  .quote-author{
-    color:#64d8ff;
-    font-size:12px;
-    margin-top:6px;
-    text-align:right;
-  }
-  .footer{
-    color:rgba(255,255,255,0.2);
-    font-size:10px;
-    margin-top:18px;
-    letter-spacing:2px;
-  }
-  .scroll-deco{
-    display:flex;
-    justify-content:center;
-    gap:6px;
-    margin:8px 0;
-  }
-  .scroll-dot{
-    width:6px;
-    height:6px;
-    border-radius:50%;
-    background:rgba(100,216,255,0.3);
-    animation:pulse 2s ease-in-out infinite;
-  }
-  .scroll-dot:nth-child(2){animation-delay:0.3s;}
-  .scroll-dot:nth-child(3){animation-delay:0.6s;}
-  @keyframes pulse{
-    0%,100%{opacity:0.3;transform:scale(1);}
-    50%{opacity:1;transform:scale(1.3);}
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>简约滚动时钟</title>
+    <style>
+        /* 全局重置与字体 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            padding: 16px;
+        }
+
+        /* 主卡片 – 极简磨砂玻璃质感 */
+        .clock-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 56px;
+            padding: 40px 48px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.2s ease;
+            max-width: 700px;
+            width: 100%;
+        }
+
+        /* 时间区域 – 水平排列，数字滚动容器 */
+        .time-row {
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: nowrap;
+            margin-bottom: 18px;
+        }
+
+        /* 每个时间块 (时/分/秒) */
+        .time-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 90px;
+        }
+
+        /* 数字滚动容器 */
+        .scroll-container {
+            height: 96px;
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+            border-radius: 28px;
+            background: transparent;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* 数字列表 – 垂直排列，通过transform实现滚动 */
+        .digit-list {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+            will-change: transform;
+            line-height: 1;
+        }
+
+        .digit-item {
+            height: 92px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            color: #1e293b;
+            background: transparent;
+            padding: 0 4px;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+
+        /* 冒号分隔符 – 精致居中 */
+        .separator {
+            font-size: 68px;
+            font-weight: 300;
+            color: #94a3b8;
+            margin: 0 4px;
+            line-height: 1;
+            padding-top: 6px;
+            opacity: 0.65;
+        }
+
+        /* 上午/下午标记 – 小字优雅 */
+        .ampm {
+            font-size: 18px;
+            font-weight: 450;
+            color: #64748b;
+            margin-left: 8px;
+            letter-spacing: 0.5px;
+            background: rgba(148, 163, 184, 0.15);
+            padding: 4px 12px;
+            border-radius: 30px;
+            backdrop-filter: blur(2px);
+            align-self: center;
+            margin-bottom: 6px;
+        }
+
+        /* 日期与星期行 */
+        .date-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            margin-top: 6px;
+            font-size: 21px;
+            font-weight: 400;
+            color: #475569;
+            letter-spacing: 0.3px;
+            background: rgba(241, 245, 249, 0.5);
+            padding: 12px 26px;
+            border-radius: 50px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(203, 213, 225, 0.25);
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .date-row span {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .dot-divider {
+            width: 4px;
+            height: 4px;
+            background: #94a3b8;
+            border-radius: 50%;
+            opacity: 0.5;
+            margin: 0 6px;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 520px) {
+            .clock-card {
+                padding: 32px 20px;
+                border-radius: 42px;
+            }
+            .time-block {
+                min-width: 64px;
+            }
+            .scroll-container {
+                height: 72px;
+            }
+            .digit-item {
+                height: 70px;
+                font-size: 58px;
+            }
+            .separator {
+                font-size: 44px;
+                margin: 0 2px;
+            }
+            .ampm {
+                font-size: 15px;
+                padding: 2px 10px;
+                margin-left: 2px;
+            }
+            .date-row {
+                font-size: 17px;
+                padding: 10px 18px;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .digit-item {
+                font-size: 46px;
+                height: 54px;
+            }
+            .scroll-container {
+                height: 56px;
+            }
+            .time-block {
+                min-width: 52px;
+            }
+            .separator {
+                font-size: 34px;
+            }
+            .date-row {
+                font-size: 15px;
+                padding: 8px 14px;
+            }
+        }
+
+        /* 辅助隐藏溢出 */
+        .overflow-hidden {
+            overflow: hidden;
+        }
+
+        /* 微光动画 – 增加一点呼吸感 (可选) */
+        @keyframes subtleGlow {
+            0% { opacity: 0.98; }
+            50% { opacity: 1; }
+            100% { opacity: 0.98; }
+        }
+        .clock-card {
+            animation: subtleGlow 4s infinite ease-in-out;
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-  <div class="clock-title">⚡ Real-Time Clock</div>
-  
-  <div class="clock-face">
-    <svg viewBox="0 0 240 240">
-      <!-- 外圈 -->
-      <circle cx="120" cy="120" r="115" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
-      <circle cx="120" cy="120" r="110" fill="rgba(255,255,255,0.02)" stroke="rgba(100,216,255,0.15)" stroke-width="1"/>
-      
-      <!-- 主刻度 -->
-      <g stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round">
-        <line x1="120" y1="18" x2="120" y2="30" transform="rotate(0,120,120)"/>
-        <line x1="120" y1="18" x2="120" y2="30" transform="rotate(30,120,120)"/>
-        <line x1="120" y1="18" x2="120" y2="30" transform="rotate(60,120,120)"/>
-        <line x1="120" y1="18" x2="120" y2="30" transform="rotate(90,120,120)"/>
-        <line x1="120" y1="18" x2="120" y2="30" transform="rotate(120,120,120)"/>
-        <line x1="120" y1="18" x2="120" y2="30" transform="rotate(150,120,120)"/>
-        <line x1="120" y1="18" x2="120" y2="30" transform="rotate(180,120,120)"/>
-        <line x1="120" y1="18" x2="120" y2="30" transform="rotate(210,120,120)"/>
-        <line x1="120" y1="18" x2="120" y2="30" transform="rotate(240,120,120)"/>
-        <line x1="120" y1="18" x2="120" y2="30" transform="rotate(270,120,120)"/>
-        <line x1="120" y1="18" x2="120" y2="30" transform="rotate(300,120,120)"/>
-        <line x1="120" y1="18" x2="120" y2="30" transform="rotate(330,120,120)"/>
-      </g>
-      
-      <!-- 副刻度 -->
-      <g stroke="rgba(255,255,255,0.2)" stroke-width="1">
-        <line x1="120" y1="22" x2="120" y2="28" transform="rotate(15,120,120)"/>
-        <line x1="120" y1="22" x2="120" y2="28" transform="rotate(45,120,120)"/>
-        <line x1="120" y1="22" x2="120" y2="28" transform="rotate(75,120,120)"/>
-        <line x1="120" y1="22" x2="120" y2="28" transform="rotate(105,120,120)"/>
-        <line x1="120" y1="22" x2="120" y2="28" transform="rotate(135,120,120)"/>
-        <line x1="120" y1="22" x2="120" y2="28" transform="rotate(165,120,120)"/>
-        <line x1="120" y1="22" x2="120" y2="28" transform="rotate(195,120,120)"/>
-        <line x1="120" y1="22" x2="120" y2="28" transform="rotate(225,120,120)"/>
-        <line x1="120" y1="22" x2="120" y2="28" transform="rotate(255,120,120)"/>
-        <line x1="120" y1="22" x2="120" y2="28" transform="rotate(285,120,120)"/>
-        <line x1="120" y1="22" x2="120" y2="28" transform="rotate(315,120,120)"/>
-        <line x1="120" y1="22" x2="120" y2="28" transform="rotate(345,120,120)"/>
-      </g>
-      
-      <!-- 数字 -->
-      <g fill="rgba(255,255,255,0.8)" font-family="Arial,sans-serif" font-size="13" font-weight="bold" text-anchor="middle">
-        <text x="120" y="50">12</text>
-        <text x="155" y="63">1</text>
-        <text x="177" y="92">2</text>
-        <text x="187" y="125">3</text>
-        <text x="178" y="158">4</text>
-        <text x="156" y="186">5</text>
-        <text x="120" y="198">6</text>
-        <text x="84" y="188">7</text>
-        <text x="62" y="161">8</text>
-        <text x="51" y="128">9</text>
-        <text x="62" y="95">10</text>
-        <text x="86" y="66">11</text>
-      </g>
-      
-      <!-- 时针（由JS控制） -->
-      <line x1="120" y1="130" x2="120" y2="72" stroke="#64d8ff" stroke-width="5" stroke-linecap="round" id="hourHand"/>
-      
-      <!-- 分针（由JS控制） -->
-      <line x1="120" y1="133" x2="120" y2="57" stroke="#7cffcb" stroke-width="3.5" stroke-linecap="round" id="minHand"/>
-      
-      <!-- 秒针（由JS控制） -->
-      <line x1="120" y1="136" x2="120" y2="44" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" id="secHand"/>
-      
-      <!-- 中心点 -->
-      <circle cx="120" cy="120" r="5" fill="#64d8ff"/>
-      <circle cx="120" cy="120" r="2" fill="#fff"/>
-    </svg>
-  </div>
-  
-  <div class="digital-time" id="digitalTime">00:00:00</div>
-  <div class="digital-date" id="digitalDate">Loading...</div>
-  
-  <div class="scroll-deco">
-    <div class="scroll-dot"></div>
-    <div class="scroll-dot"></div>
-    <div class="scroll-dot"></div>
-    <div class="scroll-dot"></div>
-    <div class="scroll-dot"></div>
-  </div>
-  
-  <div class="quote-box">
-    <div class="quote-text" id="quoteText">"Loading..."</div>
-    <div class="quote-author" id="quoteAuthor">— Loading</div>
-  </div>
-  
-  <div class="footer">✦ C++ &lt;chrono&gt; ✦</div>
+
+<div class="clock-card" id="app">
+    <!-- 时间行 -->
+    <div class="time-row">
+        <!-- 时 -->
+        <div class="time-block">
+            <div class="scroll-container" id="hoursContainer">
+                <div class="digit-list" id="hoursList">
+                    <!-- 由 JS 动态填充 0~23 -->
+                </div>
+            </div>
+        </div>
+
+        <span class="separator">:</span>
+
+        <!-- 分 -->
+        <div class="time-block">
+            <div class="scroll-container" id="minutesContainer">
+                <div class="digit-list" id="minutesList">
+                    <!-- 由 JS 动态填充 0~59 -->
+                </div>
+            </div>
+        </div>
+
+        <span class="separator">:</span>
+
+        <!-- 秒 -->
+        <div class="time-block">
+            <div class="scroll-container" id="secondsContainer">
+                <div class="digit-list" id="secondsList">
+                    <!-- 由 JS 动态填充 0~59 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- AM / PM 标记 (仅用于12小时制展示, 但此处保留装饰) -->
+        <span class="ampm" id="ampmLabel">--</span>
+    </div>
+
+    <!-- 日期 + 星期 -->
+    <div class="date-row" id="dateDisplay">
+        <span id="dateText">----年--月--日</span>
+        <span class="dot-divider"></span>
+        <span id="weekdayText">---</span>
+    </div>
 </div>
 
 <script>
-// C++名言库
-const quotes = [
-  {text: "C makes it easy to shoot yourself in the foot; C++ makes it harder, but when you do, it blows away your whole leg.", author: "Bjarne Stroustrup"},
-  {text: "Within C++, there is a much smaller and cleaner language struggling to get out.", author: "Bjarne Stroustrup"},
-  {text: "The only way to learn a new programming language is by writing programs in it.", author: "Dennis Ritchie"},
-  {text: "First solve the problem, then write the code.", author: "John Johnson"},
-  {text: "Any fool can write code that a computer can understand. Good programmers write code that humans can understand.", author: "Martin Fowler"},
-  {text: "Programming is not about typing, it's about thinking.", author: "Andy Hunt"},
-  {text: "The best error message is the one that never shows up.", author: "Thomas Fuchs"},
-  {text: "Simplicity is prerequisite for reliability.", author: "Edsger Dijkstra"},
-  {text: "Make it work, make it right, make it fast.", author: "Kent Beck"},
-  {text: "C++: where friends can access your private parts.", author: "Unknown"}
-];
+    (function() {
+        // ---------- DOM 引用 ----------
+        const hoursList = document.getElementById('hoursList');
+        const minutesList = document.getElementById('minutesList');
+        const secondsList = document.getElementById('secondsList');
 
-// 更新时钟指针和数字
-function updateClock(){
-  var now = new Date();
-  var h = now.getHours() % 12;
-  var m = now.getMinutes();
-  var s = now.getSeconds();
-  var ms = now.getMilliseconds();
-  
-  // 计算指针角度
-  var secAngle = s * 6 + ms * 0.006;  // 秒针平滑移动
-  var minAngle = m * 6 + s * 0.1;     // 分针平滑移动
-  var hourAngle = h * 30 + m * 0.5 + s * 0.00833;  // 时针平滑移动
-  
-  // 应用旋转
-  document.getElementById('secHand').setAttribute('transform', 'rotate(' + secAngle + ' 120 134)');
-  document.getElementById('minHand').setAttribute('transform', 'rotate(' + minAngle + ' 120 129)');
-  document.getElementById('hourHand').setAttribute('transform', 'rotate(' + hourAngle + ' 120 126)');
-  
-  // 更新数字时间
-  var hh = String(now.getHours()).padStart(2,'0');
-  var mm = String(m).padStart(2,'0');
-  var ss = String(s).padStart(2,'0');
-  document.getElementById('digitalTime').innerText = hh + ':' + mm + ':' + ss;
-  
-  // 更新日期
-  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  document.getElementById('digitalDate').innerText = days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
-}
+        const hoursContainer = document.getElementById('hoursContainer');
+        const minutesContainer = document.getElementById('minutesContainer');
+        const secondsContainer = document.getElementById('secondsContainer');
 
-// 随机名言
-function randomQuote(){
-  var idx = Math.floor(Math.random() * quotes.length);
-  document.getElementById('quoteText').innerText = '"' + quotes[idx].text + '"';
-  document.getElementById('quoteAuthor').innerText = '— ' + quotes[idx].author;
-}
+        const ampmEl = document.getElementById('ampmLabel');
+        const dateTextEl = document.getElementById('dateText');
+        const weekdayTextEl = document.getElementById('weekdayText');
 
-// 启动
-updateClock();
-randomQuote();
-setInterval(updateClock, 50);  // 每50ms刷新一次，指针平滑移动
-setInterval(randomQuote, 10000);  // 每10秒换名言
+        // ---------- 初始化数字列表 (0~23 / 0~59) ----------
+        function populateDigits(listElement, count, pad = true) {
+            listElement.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const item = document.createElement('div');
+                item.className = 'digit-item';
+                // 两位数显示，如 "00", "01" ... 
+                item.textContent = pad ? String(i).padStart(2, '0') : String(i);
+                listElement.appendChild(item);
+            }
+        }
+
+        // 小时: 0~23 (24个)
+        populateDigits(hoursList, 24, true);
+        // 分钟: 0~59
+        populateDigits(minutesList, 60, true);
+        // 秒: 0~59
+        populateDigits(secondsList, 60, true);
+
+        // ---------- 工具函数: 获取偏移量 ----------
+        function getOffset(value, max) {
+            // value 范围 0 ~ max-1, 每一项高度为 92px (桌面) 或动态?
+            // 但为了适配不同屏幕, 我们根据实际渲染高度计算.
+            // 取第一个 digit-item 的实际高度 (包含padding)
+            let itemHeight = 92; // fallback
+            if (hoursList.firstElementChild) {
+                const computed = window.getComputedStyle(hoursList.firstElementChild);
+                const h = hoursList.firstElementChild.offsetHeight;
+                if (h > 0) itemHeight = h;
+            }
+            return -value * itemHeight;
+        }
+
+        // 通用更新滚动位置 (transform)
+        function updateScroll(listElement, value, max) {
+            const firstItem = listElement.querySelector('.digit-item');
+            if (!firstItem) return;
+            const itemHeight = firstItem.offsetHeight;
+            if (itemHeight === 0) return;
+            const offset = -value * itemHeight;
+            listElement.style.transform = `translateY(${offset}px)`;
+        }
+
+        // ---------- 星期映射 ----------
+        const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+
+        // ---------- 更新时间 & 日期 ----------
+        function updateClock() {
+            const now = new Date();
+
+            // --- 时间 ---
+            let hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            // 判断上下午 (12小时显示用)
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+
+            // 小时转为12小时制用于显示 (但我们滚动列表依然用24小时制数值，因为列表是0~23)
+            // 但如果你希望小时显示为12小时制，滚动列表需要改成1~12，但为了符合大多数“滚动时钟”习惯，
+            // 这里保持24小时制滚动 (0~23)，同时右上角显示AM/PM作为辅助。
+            // 若想完全12小时制可修改列表，但这里保留24h滚动+AMPM标记。
+            const displayHours = hours; // 0-23
+
+            // 更新滚动位置
+            updateScroll(hoursList, displayHours, 24);
+            updateScroll(minutesList, minutes, 60);
+            updateScroll(secondsList, seconds, 60);
+
+            // 更新AM/PM
+            ampmEl.textContent = ampm;
+
+            // --- 日期 & 星期 ---
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const weekdayIndex = now.getDay(); // 0 周日
+
+            dateTextEl.textContent = `${year}年${month}月${day}日`;
+            weekdayTextEl.textContent = weekdays[weekdayIndex];
+        }
+
+        // ---------- 窗口变化重新计算 (保证高度正确) ----------
+        let resizeTimer = null;
+        function handleResize() {
+            if (resizeTimer) clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                // 强制刷新一次滚动位置
+                const now = new Date();
+                const hours = now.getHours();
+                const minutes = now.getMinutes();
+                const seconds = now.getSeconds();
+                updateScroll(hoursList, hours, 24);
+                updateScroll(minutesList, minutes, 60);
+                updateScroll(secondsList, seconds, 60);
+            }, 120);
+        }
+
+        window.addEventListener('resize', handleResize);
+
+        // ---------- 启动时钟 ----------
+        updateClock();
+        setInterval(updateClock, 200); // 200ms 保证秒数切换平滑
+
+        // 额外：页面加载完成后二次校准 (防止布局偏移)
+        window.addEventListener('load', function() {
+            setTimeout(updateClock, 180);
+        });
+
+        // 可见性变化后立即刷新 (比如从后台切回)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                updateClock();
+            }
+        });
+
+        console.log('✨ 简约滚动时钟已启动 — 设计：元宝');
+    })();
 </script>
 </body>
 </html>
